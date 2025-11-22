@@ -469,7 +469,7 @@
     </header>
 
     <div class="grid grid-2">
-      <!-- SOL TARAF: ÖZET -->
+      <!-- SOL TARAF: ÖZET + VADELİ -->
       <section class="card">
         <div class="card-inner">
           <div class="card-header">
@@ -509,6 +509,46 @@
             </button>
             <span class="muted">Sadece borç / gelir oranı hesaplamak için.</span>
           </form>
+
+          <hr class="divider" />
+
+          <!-- VADELİ MEVDUAT -->
+          <div class="card-header" style="margin-top:0; padding-top:0;">
+            <div>
+              <div class="card-title">Vadeli Mevduat</div>
+              <div class="card-desc">
+                Vadeli hesabındaki anaparayı ve yıllık faiz oranını gir; bu ay sonunda ulaşacağı tutarı ve günlük kazancı gör.
+              </div>
+            </div>
+          </div>
+
+          <form id="termDepositForm" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end;">
+            <div class="input-group" style="min-width:140px;">
+              <label for="termBalanceInput">Vadeli bakiye (₺)</label>
+              <input type="number" id="termBalanceInput" min="0" step="0.01" placeholder="Örn: 50000" />
+            </div>
+            <div class="input-group" style="min-width:140px;">
+              <label for="termRateInput">Yıllık faiz oranı (%)</label>
+              <input type="number" id="termRateInput" min="0" step="0.01" placeholder="Örn: 45" />
+            </div>
+            <button type="submit" class="btn btn-sm">
+              <span class="btn-icon">💾</span>
+              Vadeli Bilgilerini Kaydet
+            </button>
+          </form>
+
+          <div class="summary-row" style="margin-top:10px;">
+            <div class="pill pill--accent">
+              <div class="pill-label">Bu ay sonu tahmini bakiye</div>
+              <div class="pill-value" id="termMonthEndText">₺0</div>
+              <div class="pill-value-small">Basit hesap: yıllık faiz / 12 ile</div>
+            </div>
+            <div class="pill">
+              <div class="pill-label">Günlük yaklaşık kazanç</div>
+              <div class="pill-value" id="termDailyInterestText">₺0</div>
+              <div class="pill-value-small">Yıllık faiz / 365’e göre yaklaşık</div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -518,7 +558,7 @@
           <div class="expense-header">
             <div>
               <div class="card-title">Günlük Harcamalar</div>
-              <div class="card-desc">“Yeni harcama yaptım” dediğinde buradan ekle.</div>
+              <div class="card-desc">“Yeni harcama yaptım” dediğinde buradan ekle. Taksitli alışverişleri de girebilirsin.</div>
             </div>
             <button id="toggleExpenseFormBtn" class="btn btn-sm">
               <span class="btn-icon">➕</span>
@@ -538,6 +578,10 @@
                   <input type="number" id="expenseAmount" min="0" step="0.01" required />
                 </div>
                 <div class="input-group">
+                  <label for="expenseInstallmentsCount">Taksit sayısı (opsiyonel)</label>
+                  <input type="number" id="expenseInstallmentsCount" min="1" step="1" placeholder="Örn: 6" />
+                </div>
+                <div class="input-group">
                   <label for="expenseDebtSelect">Hangi kart / kredi?</label>
                   <select id="expenseDebtSelect" required>
                     <option value="">Seçiniz</option>
@@ -554,7 +598,10 @@
                   Harcamayı Ekle
                 </button>
                 <button type="button" id="cancelExpenseBtn" class="btn btn-sm btn-ghost">İptal</button>
-                <span class="muted">Bu harcama seçtiğin kart / kredi borcunun bakiyesine eklenecek.</span>
+                <span class="muted">
+                  Taksitli harcamalarda toplam tutar borç bakiyene eklenir,
+                  not olarak taksit sayısı kaydedilir.
+                </span>
               </div>
             </form>
           </div>
@@ -707,7 +754,11 @@
     const state = {
       income: 0,
       debts: [],
-      expenses: []
+      expenses: [],
+      termDeposit: {
+        balance: 0,
+        annualRate: 0
+      }
     };
 
     function loadState() {
@@ -722,6 +773,7 @@
             remainingInstallments: d.remainingInstallments || null
           }));
           state.expenses = data.expenses || [];
+          state.termDeposit = data.termDeposit || { balance: 0, annualRate: 0 };
         }
       } catch (e) {
         console.error("State okunamadı", e);
@@ -777,7 +829,31 @@
       return months;
     }
 
-    // --- Render fonksiyonları ---
+    // --- Vadeli mevduat render ---
+    function renderTermDeposit() {
+      const balance = state.termDeposit?.balance || 0;
+      const annualRate = state.termDeposit?.annualRate || 0;
+
+      const balanceInput = document.getElementById("termBalanceInput");
+      const rateInput = document.getElementById("termRateInput");
+      const monthEndText = document.getElementById("termMonthEndText");
+      const dailyText = document.getElementById("termDailyInterestText");
+
+      if (balanceInput) balanceInput.value = balance || "";
+      if (rateInput) rateInput.value = annualRate || "";
+
+      let monthlyRate = 0;
+      if (annualRate > 0) {
+        monthlyRate = (annualRate / 100) / 12;
+      }
+      const monthEndBalance = balance * (1 + monthlyRate);
+      const dailyInterest = annualRate > 0 ? (balance * (annualRate / 100)) / 365 : 0;
+
+      if (monthEndText) monthEndText.textContent = formatCurrency(isFinite(monthEndBalance) ? monthEndBalance : 0);
+      if (dailyText) dailyText.textContent = formatCurrency(isFinite(dailyInterest) ? dailyInterest : 0);
+    }
+
+    // --- Genel özet render ---
     function renderSummary() {
       const totalDebt = state.debts.reduce((sum, d) => sum + (d.balance || 0), 0);
       const totalMonthly = state.debts.reduce((sum, d) => sum + (d.monthlyPayment || 0), 0);
@@ -818,6 +894,8 @@
       } else {
         dueWarning.style.display = "none";
       }
+
+      renderTermDeposit();
     }
 
     function renderDebts() {
@@ -886,11 +964,16 @@
           const debt = state.debts.find(d => d.id === exp.debtId);
           const div = document.createElement("div");
           const date = exp.date || exp.displayDate || "";
+          const installmentsInfo =
+            exp.installmentsCount && exp.installmentsCount > 1
+              ? `<div class="muted">${exp.installmentsCount} taksit • Taksit başına ~ ${formatCurrency(exp.amount / exp.installmentsCount)}</div>`
+              : "";
           div.className = "expense-item";
           div.innerHTML = `
             <div>
               <div>${exp.description || "(Açıklama yok)"}</div>
               <div class="muted">${debt ? debt.name : "Belirtilmemiş"}</div>
+              ${installmentsInfo}
             </div>
             <div class="expense-amount">${formatCurrency(exp.amount)}</div>
             <div class="expense-date">${date}</div>
@@ -1026,6 +1109,10 @@
     function addExpenseFromForm() {
       const description = document.getElementById("expenseDescription").value.trim();
       const amount = parseFloat(document.getElementById("expenseAmount").value) || 0;
+      const installmentsVal = document.getElementById("expenseInstallmentsCount").value;
+      let installmentsCount = installmentsVal ? parseInt(installmentsVal) : 1;
+      if (!installmentsCount || installmentsCount < 1) installmentsCount = 1;
+
       const debtId = document.getElementById("expenseDebtSelect").value;
       const date = document.getElementById("expenseDate").value || todayISO();
 
@@ -1044,7 +1131,7 @@
         return;
       }
 
-      // Borç bakiyesine ekle
+      // Borç bakiyesine ekle (taksitli de olsa toplam tutar eklenir)
       debt.balance = (debt.balance || 0) + amount;
 
       // Harcama kaydı ekle
@@ -1054,6 +1141,7 @@
         amount,
         debtId,
         date,
+        installmentsCount,
         createdAt: Date.now()
       });
 
@@ -1070,6 +1158,14 @@
       state.income = income;
       saveState();
       renderSummary();
+    }
+
+    function saveTermDepositFromForm() {
+      const balance = parseFloat(document.getElementById("termBalanceInput").value) || 0;
+      const rate = parseFloat(document.getElementById("termRateInput").value) || 0;
+      state.termDeposit = { balance, annualRate: rate };
+      saveState();
+      renderTermDeposit();
     }
 
     // --- Simülasyon ---
@@ -1245,6 +1341,11 @@
         saveIncomeFromForm();
       });
 
+      document.getElementById("termDepositForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        saveTermDepositFromForm();
+      });
+
       document.getElementById("simForm").addEventListener("submit", (e) => {
         e.preventDefault();
         runSimulationFromForm();
@@ -1273,6 +1374,7 @@
       document.getElementById("incomeInput").value = state.income || "";
       renderDebts();
       renderExpenses();
+      renderTermDeposit();
     });
   </script>
 </body>
