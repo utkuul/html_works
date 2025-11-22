@@ -220,6 +220,7 @@
       box-shadow: 0 0 0 1px rgba(34,197,94,0.3);
     }
 
+    /* === KIRMIZI NEON BUTONLAR === */
     .btn {
       border-radius: 999px;
       padding: 7px 14px;
@@ -230,32 +231,55 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: linear-gradient(135deg, #ef4444, #f97316);
+      background: radial-gradient(circle at 30% 0, #ff7aa2 0, #ff1744 30%, #b91c1c 70%);
       color: #fff;
-      box-shadow: 0 10px 25px rgba(239,68,68,0.4);
+      box-shadow:
+        0 0 6px rgba(248,113,113,0.95),
+        0 0 16px rgba(248,113,113,0.8),
+        0 0 32px rgba(248,113,113,0.65);
       margin-top: auto;
       white-space: nowrap;
-      transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.08s ease;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.08s ease, filter 0.08s ease;
     }
 
     .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 30px rgba(239,68,68,0.55);
-      opacity: 0.97;
+      transform: translateY(-1px) scale(1.01);
+      box-shadow:
+        0 0 10px rgba(248,113,113,1),
+        0 0 24px rgba(248,113,113,0.9),
+        0 0 40px rgba(248,113,113,0.8);
+      filter: brightness(1.05);
+      opacity: 0.98;
     }
 
     .btn:active {
-      transform: translateY(0);
-      box-shadow: 0 8px 18px rgba(0,0,0,0.6);
-      opacity: 0.9;
+      transform: translateY(0) scale(0.99);
+      box-shadow:
+        0 0 6px rgba(248,113,113,0.9),
+        0 0 18px rgba(248,113,113,0.7);
+      opacity: 0.92;
     }
 
+    /* Ghost butonlar da kırmızı neon çerçeveli */
     .btn-ghost {
       background: transparent;
-      color: var(--muted);
+      color: #fecaca;
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.4);
-      box-shadow: none;
+      border: 1px solid rgba(248,113,113,0.85);
+      box-shadow:
+        0 0 6px rgba(248,113,113,0.6),
+        0 0 16px rgba(248,113,113,0.4);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(127,29,29,0.3);
+      box-shadow:
+        0 0 10px rgba(248,113,113,0.9),
+        0 0 24px rgba(248,113,113,0.7);
+    }
+
+    .btn-ghost:active {
+      background: rgba(127,29,29,0.5);
     }
 
     .btn-sm {
@@ -541,7 +565,9 @@
             <div class="pill pill--accent">
               <div class="pill-label">Bu ay sonu tahmini bakiye</div>
               <div class="pill-value" id="termMonthEndText">₺0</div>
-              <div class="pill-value-small">Basit hesap: yıllık faiz / 12 ile</div>
+              <div class="pill-value-small" id="termMonthInfo">
+                Anapara: ₺0 • Tahmini kazanç: ₺0
+              </div>
             </div>
             <div class="pill">
               <div class="pill-label">Günlük yaklaşık kazanç</div>
@@ -748,7 +774,6 @@
   </div>
 
   <script>
-    // --- Basit state yönetimi ---
     const STORAGE_KEY = "borc_takip_v1";
 
     const state = {
@@ -784,7 +809,6 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
-    // --- Yardımcılar ---
     function formatCurrency(amount) {
       if (isNaN(amount)) return "₺0";
       return "₺" + amount.toLocaleString("tr-TR", {
@@ -829,7 +853,6 @@
       return months;
     }
 
-    // --- Vadeli mevduat render ---
     function renderTermDeposit() {
       const balance = state.termDeposit?.balance || 0;
       const annualRate = state.termDeposit?.annualRate || 0;
@@ -838,6 +861,7 @@
       const rateInput = document.getElementById("termRateInput");
       const monthEndText = document.getElementById("termMonthEndText");
       const dailyText = document.getElementById("termDailyInterestText");
+      const monthInfo = document.getElementById("termMonthInfo");
 
       if (balanceInput) balanceInput.value = balance || "";
       if (rateInput) rateInput.value = annualRate || "";
@@ -848,12 +872,16 @@
       }
       const monthEndBalance = balance * (1 + monthlyRate);
       const dailyInterest = annualRate > 0 ? (balance * (annualRate / 100)) / 365 : 0;
+      const profit = Math.max(monthEndBalance - balance, 0);
 
       if (monthEndText) monthEndText.textContent = formatCurrency(isFinite(monthEndBalance) ? monthEndBalance : 0);
       if (dailyText) dailyText.textContent = formatCurrency(isFinite(dailyInterest) ? dailyInterest : 0);
+      if (monthInfo) {
+        monthInfo.textContent =
+          `Anapara: ${formatCurrency(balance)} • Tahmini kazanç: ${formatCurrency(isFinite(profit) ? profit : 0)}`;
+      }
     }
 
-    // --- Genel özet render ---
     function renderSummary() {
       const totalDebt = state.debts.reduce((sum, d) => sum + (d.balance || 0), 0);
       const totalMonthly = state.debts.reduce((sum, d) => sum + (d.monthlyPayment || 0), 0);
@@ -873,7 +901,6 @@
       ratioSpan.textContent = ratio.toFixed(1) + "%";
       ratioSpan.className = ratio > 50 ? "text-danger" : "text-accent";
 
-      // Son ödeme günü uyarısı
       const dueWarning = document.getElementById("dueWarning");
       const today = new Date().getDate();
       const upcoming = state.debts
@@ -930,7 +957,6 @@
         tbody.appendChild(tr);
       });
 
-      // Edit / delete
       tbody.querySelectorAll("button[data-edit]").forEach(btn => {
         btn.addEventListener("click", () => {
           const id = btn.getAttribute("data-edit");
@@ -1029,7 +1055,6 @@
       }
     }
 
-    // --- CRUD işlemleri ---
     function upsertDebtFromForm() {
       const name = document.getElementById("debtName").value.trim();
       const type = document.getElementById("debtType").value;
@@ -1050,7 +1075,6 @@
       const existingIndex = state.debts.findIndex(d => d.name.toLowerCase() === name.toLowerCase());
 
       if (existingIndex >= 0) {
-        // güncelle
         state.debts[existingIndex] = {
           ...state.debts[existingIndex],
           name,
@@ -1131,10 +1155,8 @@
         return;
       }
 
-      // Borç bakiyesine ekle (taksitli de olsa toplam tutar eklenir)
       debt.balance = (debt.balance || 0) + amount;
 
-      // Harcama kaydı ekle
       state.expenses.push({
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
         description,
@@ -1168,7 +1190,6 @@
       renderTermDeposit();
     }
 
-    // --- Simülasyon ---
     function runSimulationFromForm() {
       const select = document.getElementById("simDebtSelect");
       const targetDateStr = document.getElementById("simTargetDate").value;
@@ -1199,7 +1220,7 @@
 
       const results = debtsToSim.map(d => {
         const P = d.balance || 0;
-        const r = d.interestRate ? d.interestRate / 100 : 0; // aylık faiz (örn 0.025)
+        const r = d.interestRate ? d.interestRate / 100 : 0;
         let payment = 0;
         if (r > 0) {
           const pow = Math.pow(1 + r, -months);
@@ -1264,7 +1285,6 @@
       `;
     }
 
-    // --- Avalanche önerisi ---
     function renderAvalancheSuggestion() {
       const container = document.getElementById("avalancheResult");
       if (!container) return;
@@ -1316,16 +1336,13 @@
       `;
     }
 
-    // --- Event listener'lar ---
     document.addEventListener("DOMContentLoaded", () => {
       loadState();
       updateCurrentMonthLabel();
 
-      // Varsayılan tarih
       const expenseDateInput = document.getElementById("expenseDate");
       expenseDateInput.value = todayISO();
 
-      // Formlar
       document.getElementById("debtForm").addEventListener("submit", (e) => {
         e.preventDefault();
         upsertDebtFromForm();
@@ -1351,7 +1368,6 @@
         runSimulationFromForm();
       });
 
-      // Harcama formu aç/kapa
       const toggleBtn = document.getElementById("toggleExpenseFormBtn");
       const expenseContainer = document.getElementById("expenseFormContainer");
       const cancelExpenseBtn = document.getElementById("cancelExpenseBtn");
@@ -1370,7 +1386,6 @@
       toggleBtn.addEventListener("click", () => toggleExpenseForm());
       cancelExpenseBtn.addEventListener("click", () => toggleExpenseForm(false));
 
-      // Initial render
       document.getElementById("incomeInput").value = state.income || "";
       renderDebts();
       renderExpenses();
