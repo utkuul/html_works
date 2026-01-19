@@ -1,1396 +1,156 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Borç ve Harcama Takip Paneli</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #0f172a;
-      --bg-alt: #111827;
-      --card: #020617;
-      --accent: #22c55e;
-      --accent-soft: rgba(34, 197, 94, 0.15);
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --danger: #ef4444;
-      --border: #1f2933;
-      --radius-lg: 1rem;
-      --radius-md: .6rem;
-      --shadow-soft: 0 18px 40px rgba(0,0,0,0.48);
-    }
-
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-    }
-
-    body {
-      margin: 0;
-      background: radial-gradient(circle at top, #1f2937 0, #020617 55%, #000 100%);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 24px;
-    }
-
-    .app {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      font-size: 2rem;
-      letter-spacing: .04em;
-      margin: 0 0 4px;
-    }
-
-    .subtitle {
-      color: var(--muted);
-      font-size: .9rem;
-      margin-bottom: 24px;
-    }
-
-    .grid {
-      display: grid;
-      gap: 18px;
-    }
-
-    @media (min-width: 900px) {
-      .grid-2 {
-        grid-template-columns: 1.4fr 1fr;
-      }
-      .grid-2-compact {
-        grid-template-columns: 1.2fr 1fr;
-      }
-    }
-
-    .card {
-      background: radial-gradient(circle at top left, #020617, #020617 40%, #020617 80%);
-      border-radius: var(--radius-lg);
-      padding: 18px 18px 16px;
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      box-shadow: var(--shadow-soft);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      opacity: .16;
-      background:
-        radial-gradient(circle at 10% 10%, rgba(34, 197, 94, 0.3) 0, transparent 35%),
-        radial-gradient(circle at 80% 100%, rgba(56, 189, 248, 0.28) 0, transparent 40%);
-      pointer-events: none;
-    }
-
-    .card-inner {
-      position: relative;
-      z-index: 1;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 10px;
-      gap: 8px;
-    }
-
-    .card-title {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .card-desc {
-      color: var(--muted);
-      font-size: .8rem;
-    }
-
-    .badge {
-      border-radius: 999px;
-      padding: 3px 10px;
-      font-size: .7rem;
-      border: 1px solid rgba(148,163,184,0.26);
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .badge-accent {
-      border-color: rgba(34,197,94,0.7);
-      background: var(--accent-soft);
-      color: #bbf7d0;
-    }
-
-    .summary-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 6px;
-      flex-wrap: wrap;
-    }
-
-    .pill {
-      flex: 1;
-      min-width: 150px;
-      border-radius: var(--radius-md);
-      background: rgba(15,23,42,0.9);
-      border: 1px solid rgba(148,163,184,0.2);
-      padding: 10px 12px;
-    }
-
-    .pill-label {
-      font-size: .7rem;
-      text-transform: uppercase;
-      color: var(--muted);
-      letter-spacing: .05em;
-      margin-bottom: 3px;
-    }
-
-    .pill-value {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .pill-value-small {
-      font-size: .8rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .pill--accent {
-      border-color: rgba(34,197,94,0.5);
-      background: var(--accent-soft);
-    }
-
-    .pill--danger {
-      border-color: rgba(248,113,113,0.65);
-      background: rgba(248,113,113,0.12);
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .form-grid-compact {
-      grid-template-columns: repeat(3, minmax(0,1fr));
-    }
-
-    @media (max-width: 900px) {
-      .form-grid,
-      .form-grid-compact {
-        grid-template-columns: repeat(2, minmax(0,1fr));
-      }
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      font-size: .8rem;
-    }
-
-    label {
-      color: var(--muted);
-    }
-
-    input[type="text"],
-    input[type="number"],
-    input[type="date"],
-    select {
-      border-radius: .45rem;
-      border: 1px solid rgba(148,163,184,0.4);
-      background: rgba(15,23,42,0.9);
-      padding: 6px 9px;
-      color: var(--text);
-      font-size: .8rem;
-      outline: none;
-    }
-
-    input::placeholder {
-      color: rgba(148,163,184,0.7);
-    }
-
-    input:focus,
-    select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(34,197,94,0.3);
-    }
-
-    /* === KIRMIZI NEON BUTONLAR === */
-    .btn {
-      border-radius: 999px;
-      padding: 7px 14px;
-      border: none;
-      cursor: pointer;
-      font-size: .8rem;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: radial-gradient(circle at 30% 0, #ff7aa2 0, #ff1744 30%, #b91c1c 70%);
-      color: #fff;
-      box-shadow:
-        0 0 6px rgba(248,113,113,0.95),
-        0 0 16px rgba(248,113,113,0.8),
-        0 0 32px rgba(248,113,113,0.65);
-      margin-top: auto;
-      white-space: nowrap;
-      transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.08s ease, filter 0.08s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px) scale(1.01);
-      box-shadow:
-        0 0 10px rgba(248,113,113,1),
-        0 0 24px rgba(248,113,113,0.9),
-        0 0 40px rgba(248,113,113,0.8);
-      filter: brightness(1.05);
-      opacity: 0.98;
-    }
-
-    .btn:active {
-      transform: translateY(0) scale(0.99);
-      box-shadow:
-        0 0 6px rgba(248,113,113,0.9),
-        0 0 18px rgba(248,113,113,0.7);
-      opacity: 0.92;
-    }
-
-    /* Ghost butonlar da kırmızı neon çerçeveli */
-    .btn-ghost {
-      background: transparent;
-      color: #fecaca;
-      border-radius: 999px;
-      border: 1px solid rgba(248,113,113,0.85);
-      box-shadow:
-        0 0 6px rgba(248,113,113,0.6),
-        0 0 16px rgba(248,113,113,0.4);
-    }
-
-    .btn-ghost:hover {
-      background: rgba(127,29,29,0.3);
-      box-shadow:
-        0 0 10px rgba(248,113,113,0.9),
-        0 0 24px rgba(248,113,113,0.7);
-    }
-
-    .btn-ghost:active {
-      background: rgba(127,29,29,0.5);
-    }
-
-    .btn-sm {
-      padding: 3px 9px;
-      font-size: .75rem;
-    }
-
-    .btn-icon {
-      font-size: .9rem;
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: .8rem;
-    }
-
-    .table thead {
-      background: rgba(15,23,42,0.9);
-    }
-
-    .table th,
-    .table td {
-      padding: 6px 8px;
-      text-align: left;
-      border-bottom: 1px solid rgba(31,41,55,0.9);
-    }
-
-    .table th {
-      font-size: .7rem;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .tag {
-      font-size: .7rem;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.4);
-      color: var(--muted);
-      background: rgba(15,23,42,0.9);
-      white-space: nowrap;
-    }
-
-    .tag-cc {
-      border-color: rgba(59,130,246,0.7);
-      color: #bfdbfe;
-      background: rgba(59,130,246,0.15);
-    }
-
-    .tag-loan {
-      border-color: rgba(248,113,113,0.7);
-      color: #fecaca;
-      background: rgba(248,113,113,0.15);
-    }
-
-    .tag-other {
-      border-color: rgba(244,114,182,0.7);
-      color: #fbcfe8;
-      background: rgba(244,114,182,0.15);
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: .8rem;
-    }
-
-    .expense-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-
-    .expense-form {
-      margin-top: 8px;
-      border-radius: var(--radius-md);
-      padding: 10px;
-      background: rgba(15,23,42,0.92);
-      border: 1px dashed rgba(148,163,184,0.5);
-    }
-
-    .expense-list {
-      margin-top: 10px;
-      max-height: 260px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .expense-item {
-      display: grid;
-      grid-template-columns: 1.2fr 0.7fr 0.7fr;
-      gap: 6px;
-      padding: 6px 0;
-      border-bottom: 1px dashed rgba(31,41,55,0.9);
-      font-size: .8rem;
-    }
-
-    .expense-item:last-child {
-      border-bottom: none;
-    }
-
-    .expense-amount {
-      text-align: right;
-      font-weight: 600;
-    }
-
-    .expense-date {
-      text-align: right;
-      color: var(--muted);
-      font-size: .75rem;
-    }
-
-    .pill-alert {
-      font-size: .75rem;
-      margin-top: 8px;
-      padding: 6px 8px;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(251,191,36,0.7);
-      background: rgba(251,191,36,0.12);
-      color: #fbbf24;
-    }
-
-    .text-danger {
-      color: var(--danger);
-      font-weight: 600;
-    }
-
-    .text-accent {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    .footer-note {
-      margin-top: 14px;
-      font-size: .75rem;
-      color: var(--muted);
-      text-align: right;
-    }
-
-    .sim-result {
-      margin-top: 10px;
-      font-size: .8rem;
-      border-radius: var(--radius-md);
-      background: rgba(15,23,42,0.95);
-      border: 1px solid rgba(148,163,184,0.3);
-      padding: 10px;
-    }
-
-    .sim-list {
-      margin-top: 6px;
-    }
-
-    .sim-item {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 4px 0;
-      border-bottom: 1px dashed rgba(31,41,55,0.8);
-    }
-
-    .sim-item:last-child {
-      border-bottom: none;
-    }
-
-    .sim-main {
-      font-weight: 500;
-    }
-
-    .sim-sub {
-      color: var(--muted);
-      font-size: .75rem;
-    }
-
-    .sim-highlight {
-      font-weight: 600;
-    }
-
-    hr.divider {
-      border: none;
-      border-top: 1px solid rgba(31,41,55,0.9);
-      margin: 14px 0 8px;
-    }
-
-    @media (max-width: 600px) {
-      body {
-        padding: 14px;
-      }
-      .card {
-        padding: 14px 12px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>AM/PM → Türkiye Saati</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root {
+    --bg: #ffffff;
+    --text: #000000;
+    --input-bg: #f2f2f2;
+    --border: #cccccc;
+    --btn-bg: #000000;
+    --btn-text: #ffffff;
+}
+
+[data-theme="dark"] {
+    --bg: #121212;
+    --text: #eaeaea;
+    --input-bg: #1f1f1f;
+    --border: #333333;
+    --btn-bg: #ffffff;
+    --btn-text: #000000;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+    max-width: 420px;
+    margin: 40px auto;
+    padding: 15px;
+    transition: all 0.3s ease;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+button {
+    cursor: pointer;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+}
+
+.toggle {
+    margin-bottom: 15px;
+    text-align: right;
+}
+
+.result {
+    margin-top: 15px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+footer {
+    margin-top: 40px;
+    font-size: 12px;
+    color: gray;
+    text-align: center;
+}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <header>
-      <h1>Borç & Harcama Takip Paneli</h1>
-      <div class="subtitle">
-        Kredi kartı ve kredi borçlarını tek ekranda gör, aylık ödemelerini planla, yeni harcamalarını anında ekle.
-      </div>
-    </header>
 
-    <div class="grid grid-2">
-      <!-- SOL TARAF: ÖZET + VADELİ -->
-      <section class="card">
-        <div class="card-inner">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Genel Özet</div>
-              <div class="card-desc">Toplam borç, bu ayki minimum ödeme ve borç / gelir oranı.</div>
-            </div>
-            <span class="badge badge-accent" id="currentMonthLabel">Bu Ay</span>
-          </div>
+<div class="toggle">
+    <button onclick="toggleTheme()">🌙 / ☀️</button>
+</div>
 
-          <div class="summary-row">
-            <div class="pill pill--danger">
-              <div class="pill-label">Toplam Borç</div>
-              <div class="pill-value" id="totalDebtText">₺0</div>
-              <div class="pill-value-small" id="debtCountText">0 kalem borç</div>
-            </div>
-            <div class="pill">
-              <div class="pill-label">Bu Ay Ödeme (Min.)</div>
-              <div class="pill-value" id="monthlyPaymentText">₺0</div>
-              <div class="pill-value-small" id="dueSoonText">Son ödeme günleri için aşağıya bak</div>
-            </div>
-            <div class="pill">
-              <div class="pill-label">Aylık Net Gelirin</div>
-              <div class="pill-value" id="incomeText">₺0</div>
-              <div class="pill-value-small">Borç / Gelir: <span id="debtIncomeRatio">0%</span></div>
-            </div>
-          </div>
+<h2>AM / PM → Türkiye Saati</h2>
 
-          <form id="incomeForm" style="margin-top: 12px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
-            <div class="input-group" style="min-width:150px;">
-              <label for="incomeInput">Aylık net gelir (opsiyonel)</label>
-              <input type="number" id="incomeInput" placeholder="Örn: 25000" min="0" step="0.01" />
-            </div>
-            <button type="submit" class="btn btn-sm">
-              <span class="btn-icon">💾</span>
-              Geliri Kaydet
-            </button>
-            <span class="muted">Sadece borç / gelir oranı hesaplamak için.</span>
-          </form>
+<label>Zaman Dilimi</label>
+<select id="country">
+    <option value="America/New_York">Amerika (New York)</option>
+    <option value="Europe/Vienna">Avusturya (Viyana)</option>
+</select>
 
-          <hr class="divider" />
+<label>Saat (ör: 11 pm, 9:30 am)</label>
+<input type="text" id="timeInput" placeholder="11 pm">
 
-          <!-- VADELİ MEVDUAT -->
-          <div class="card-header" style="margin-top:0; padding-top:0;">
-            <div>
-              <div class="card-title">Vadeli Mevduat</div>
-              <div class="card-desc">
-                Vadeli hesabındaki anaparayı ve yıllık faiz oranını gir; bu ay sonunda ulaşacağı tutarı ve günlük kazancı gör.
-              </div>
-            </div>
-          </div>
+<button onclick="convertTime()">Çevir</button>
 
-          <form id="termDepositForm" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end;">
-            <div class="input-group" style="min-width:140px;">
-              <label for="termBalanceInput">Vadeli bakiye (₺)</label>
-              <input type="number" id="termBalanceInput" min="0" step="0.01" placeholder="Örn: 50000" />
-            </div>
-            <div class="input-group" style="min-width:140px;">
-              <label for="termRateInput">Yıllık faiz oranı (%)</label>
-              <input type="number" id="termRateInput" min="0" step="0.01" placeholder="Örn: 45" />
-            </div>
-            <button type="submit" class="btn btn-sm">
-              <span class="btn-icon">💾</span>
-              Vadeli Bilgilerini Kaydet
-            </button>
-          </form>
+<div class="result" id="result"></div>
 
-          <div class="summary-row" style="margin-top:10px;">
-            <div class="pill pill--accent">
-              <div class="pill-label">Bu ay sonu tahmini bakiye</div>
-              <div class="pill-value" id="termMonthEndText">₺0</div>
-              <div class="pill-value-small" id="termMonthInfo">
-                Anapara: ₺0 • Tahmini kazanç: ₺0
-              </div>
-            </div>
-            <div class="pill">
-              <div class="pill-label">Günlük yaklaşık kazanç</div>
-              <div class="pill-value" id="termDailyInterestText">₺0</div>
-              <div class="pill-value-small">Yıllık faiz / 365’e göre yaklaşık</div>
-            </div>
-          </div>
-        </div>
-      </section>
+<footer>
+    Yaz saati otomatik hesaplanır
+</footer>
 
-      <!-- SAĞ TARAF: GÜNLÜK HARCAMALAR -->
-      <section class="card">
-        <div class="card-inner">
-          <div class="expense-header">
-            <div>
-              <div class="card-title">Günlük Harcamalar</div>
-              <div class="card-desc">“Yeni harcama yaptım” dediğinde buradan ekle. Taksitli alışverişleri de girebilirsin.</div>
-            </div>
-            <button id="toggleExpenseFormBtn" class="btn btn-sm">
-              <span class="btn-icon">➕</span>
-              Yeni harcama yaptım
-            </button>
-          </div>
+<script>
+const root = document.documentElement;
 
-          <div id="expenseFormContainer" class="expense-form" style="display:none;">
-            <form id="expenseForm">
-              <div class="form-grid">
-                <div class="input-group">
-                  <label for="expenseDescription">Açıklama</label>
-                  <input type="text" id="expenseDescription" placeholder="Market, akaryakıt, online alışveriş..." />
-                </div>
-                <div class="input-group">
-                  <label for="expenseAmount">Tutar (₺)</label>
-                  <input type="number" id="expenseAmount" min="0" step="0.01" required />
-                </div>
-                <div class="input-group">
-                  <label for="expenseInstallmentsCount">Taksit sayısı (opsiyonel)</label>
-                  <input type="number" id="expenseInstallmentsCount" min="1" step="1" placeholder="Örn: 6" />
-                </div>
-                <div class="input-group">
-                  <label for="expenseDebtSelect">Hangi kart / kredi?</label>
-                  <select id="expenseDebtSelect" required>
-                    <option value="">Seçiniz</option>
-                  </select>
-                </div>
-                <div class="input-group">
-                  <label for="expenseDate">Tarih</label>
-                  <input type="date" id="expenseDate" />
-                </div>
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:8px; flex-wrap:wrap;">
-                <button type="submit" class="btn btn-sm">
-                  <span class="btn-icon">✅</span>
-                  Harcamayı Ekle
-                </button>
-                <button type="button" id="cancelExpenseBtn" class="btn btn-sm btn-ghost">İptal</button>
-                <span class="muted">
-                  Taksitli harcamalarda toplam tutar borç bakiyene eklenir,
-                  not olarak taksit sayısı kaydedilir.
-                </span>
-              </div>
-            </form>
-          </div>
+function setTheme(theme) {
+    root.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+}
 
-          <div class="expense-list" id="expenseList"></div>
-          <div class="pill-alert" id="expenseSummaryAlert" style="display:none;"></div>
-        </div>
-      </section>
-    </div>
+function toggleTheme() {
+    const current = root.getAttribute("data-theme");
+    setTheme(current === "dark" ? "light" : "dark");
+}
 
-    <div class="grid grid-2-compact" style="margin-top:18px;">
-      <!-- BORÇ KARTLARI -->
-      <section class="card">
-        <div class="card-inner">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Kart ve Kredi Listesi</div>
-              <div class="card-desc">Her kart / kredinin kalan borcu, aylık ödemesi, faiz ve taksit bilgisi.</div>
-            </div>
-            <span class="badge">Maksimum kontrol için detaylı liste</span>
-          </div>
-
-          <form id="debtForm">
-            <div class="form-grid form-grid-compact">
-              <div class="input-group">
-                <label for="debtName">Adı</label>
-                <input type="text" id="debtName" placeholder="Örn: Akbank Axess, İhtiyaç Kredisi" required />
-              </div>
-              <div class="input-group">
-                <label for="debtType">Türü</label>
-                <select id="debtType">
-                  <option value="creditCard">Kredi Kartı</option>
-                  <option value="loan">Kredi</option>
-                  <option value="other">Diğer</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <label for="debtBalance">Kalan Borç (₺)</label>
-                <input type="number" id="debtBalance" min="0" step="0.01" required />
-              </div>
-              <div class="input-group">
-                <label for="debtMonthlyPayment">Aylık Ödeme (min)</label>
-                <input type="number" id="debtMonthlyPayment" min="0" step="0.01" required />
-              </div>
-              <div class="input-group">
-                <label for="debtInterestRate">Aylık Faiz Oranı (%)</label>
-                <input type="number" id="debtInterestRate" min="0" step="0.01" placeholder="Örn: 2.5" />
-              </div>
-              <div class="input-group">
-                <label for="debtInstallments">Kalan Taksit Sayısı</label>
-                <input type="number" id="debtInstallments" min="0" step="1" placeholder="Opsiyonel" />
-              </div>
-              <div class="input-group">
-                <label for="debtDueDay">Son ödeme günü (1-31)</label>
-                <input type="number" id="debtDueDay" min="1" max="31" placeholder="Örn: 10" />
-              </div>
-              <div class="input-group" style="align-self:flex-end;">
-                <button type="submit" class="btn btn-sm">
-                  <span class="btn-icon">➕</span>
-                  Borç Ekle / Güncelle
-                </button>
-              </div>
-            </div>
-          </form>
-
-          <div style="overflow-x:auto;">
-            <table class="table" id="debtTable">
-              <thead>
-                <tr>
-                  <th>Ad</th>
-                  <th>Tür</th>
-                  <th>Kalan Borç</th>
-                  <th>Aylık Ödeme</th>
-                  <th>Faiz (aylık %)</th>
-                  <th>Kalan Taksit</th>
-                  <th>Son Gün</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- JS ile doldurulacak -->
-              </tbody>
-            </table>
-          </div>
-
-          <div class="pill-alert" id="dueWarning" style="display:none;"></div>
-        </div>
-      </section>
-
-      <!-- FAİZ & SİMÜLASYON + AVALANCHE -->
-      <section class="card">
-        <div class="card-inner">
-          <div class="card-header">
-            <div>
-              <div class="card-title">“Şu tarihe kadar borçsuz kal” simülasyonu</div>
-              <div class="card-desc">Seçtiğin tarihe kadar borçsuz kalmak için aylık ne kadar ödemen gerektiğini hesaplar.</div>
-            </div>
-            <span class="badge">Basit finans simülatörü</span>
-          </div>
-
-          <form id="simForm">
-            <div class="form-grid form-grid-compact">
-              <div class="input-group">
-                <label for="simDebtSelect">Hangi borç?</label>
-                <select id="simDebtSelect">
-                  <option value="all">Tüm borçlar</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <label for="simTargetDate">Hedef tarih</label>
-                <input type="date" id="simTargetDate" required />
-              </div>
-              <div class="input-group">
-                <label>&nbsp;</label>
-                <button type="submit" class="btn btn-sm">
-                  <span class="btn-icon">📅</span>
-                  Simülasyonu Çalıştır
-                </button>
-              </div>
-            </div>
-          </form>
-
-          <div id="simResult" class="sim-result" style="display:none;"></div>
-
-          <hr class="divider" />
-
-          <div class="card-header" style="margin-top:0; padding-top:0;">
-            <div>
-              <div class="card-title">Avalanche önerisi</div>
-              <div class="card-desc">
-                Faiz oranı en yüksek olandan başlayarak hangi borcu önce kapatmanın daha mantıklı olduğunu sıralar.
-              </div>
-            </div>
-          </div>
-
-          <div id="avalancheResult" class="sim-result"></div>
-        </div>
-      </section>
-    </div>
-
-    <div class="footer-note">
-      Not: Bu sayfa sadece kişisel takip içindir, resmi finansal tavsiye yerine geçmez.
-    </div>
-  </div>
-
-  <script>
-    const STORAGE_KEY = "borc_takip_v1";
-
-    const state = {
-      income: 0,
-      debts: [],
-      expenses: [],
-      termDeposit: {
-        balance: 0,
-        annualRate: 0
-      }
-    };
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const data = JSON.parse(raw);
-          state.income = data.income || 0;
-          state.debts = (data.debts || []).map(d => ({
-            ...d,
-            interestRate: d.interestRate || 0,
-            remainingInstallments: d.remainingInstallments || null
-          }));
-          state.expenses = data.expenses || [];
-          state.termDeposit = data.termDeposit || { balance: 0, annualRate: 0 };
-        }
-      } catch (e) {
-        console.error("State okunamadı", e);
-      }
+// İlk yükleme
+(function initTheme() {
+    const saved = localStorage.getItem("theme");
+    if (saved) {
+        setTheme(saved);
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        setTheme("dark");
     }
+})();
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
+function convertTime() {
+    const timeStr = document.getElementById("timeInput").value.trim().toLowerCase();
+    const timeZone = document.getElementById("country").value;
 
-    function formatCurrency(amount) {
-      if (isNaN(amount)) return "₺0";
-      return "₺" + amount.toLocaleString("tr-TR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-    }
-
-    function getDebtTypeTag(type) {
-      if (type === "creditCard") return { text: "Kredi Kartı", cls: "tag tag-cc" };
-      if (type === "loan") return { text: "Kredi", cls: "tag tag-loan" };
-      return { text: "Diğer", cls: "tag tag-other" };
-    }
-
-    function todayISO() {
-      const d = new Date();
-      return d.toISOString().slice(0, 10);
-    }
-
-    function updateCurrentMonthLabel() {
-      const label = document.getElementById("currentMonthLabel");
-      const d = new Date();
-      const months = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
-      label.textContent = months[d.getMonth()] + " " + d.getFullYear();
-    }
-
-    function monthsBetweenNowAnd(dateStr) {
-      const now = new Date();
-      const target = new Date(dateStr);
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const end = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-      if (end <= start) return 0;
-
-      let months =
-        (end.getFullYear() - start.getFullYear()) * 12 +
-        (end.getMonth() - start.getMonth());
-
-      if (end.getDate() > start.getDate()) {
-        months += 1;
-      }
-      if (months < 1) months = 1;
-      return months;
-    }
-
-    function renderTermDeposit() {
-      const balance = state.termDeposit?.balance || 0;
-      const annualRate = state.termDeposit?.annualRate || 0;
-
-      const balanceInput = document.getElementById("termBalanceInput");
-      const rateInput = document.getElementById("termRateInput");
-      const monthEndText = document.getElementById("termMonthEndText");
-      const dailyText = document.getElementById("termDailyInterestText");
-      const monthInfo = document.getElementById("termMonthInfo");
-
-      if (balanceInput) balanceInput.value = balance || "";
-      if (rateInput) rateInput.value = annualRate || "";
-
-      let monthlyRate = 0;
-      if (annualRate > 0) {
-        monthlyRate = (annualRate / 100) / 12;
-      }
-      const monthEndBalance = balance * (1 + monthlyRate);
-      const dailyInterest = annualRate > 0 ? (balance * (annualRate / 100)) / 365 : 0;
-      const profit = Math.max(monthEndBalance - balance, 0);
-
-      if (monthEndText) monthEndText.textContent = formatCurrency(isFinite(monthEndBalance) ? monthEndBalance : 0);
-      if (dailyText) dailyText.textContent = formatCurrency(isFinite(dailyInterest) ? dailyInterest : 0);
-      if (monthInfo) {
-        monthInfo.textContent =
-          `Anapara: ${formatCurrency(balance)} • Tahmini kazanç: ${formatCurrency(isFinite(profit) ? profit : 0)}`;
-      }
-    }
-
-    function renderSummary() {
-      const totalDebt = state.debts.reduce((sum, d) => sum + (d.balance || 0), 0);
-      const totalMonthly = state.debts.reduce((sum, d) => sum + (d.monthlyPayment || 0), 0);
-
-      document.getElementById("totalDebtText").textContent = formatCurrency(totalDebt);
-      document.getElementById("monthlyPaymentText").textContent = formatCurrency(totalMonthly);
-      document.getElementById("debtCountText").textContent = state.debts.length + " kalem borç";
-
-      const incomeText = document.getElementById("incomeText");
-      const ratioSpan = document.getElementById("debtIncomeRatio");
-      incomeText.textContent = formatCurrency(state.income || 0);
-
-      let ratio = 0;
-      if (state.income > 0) {
-        ratio = (totalMonthly / state.income) * 100;
-      }
-      ratioSpan.textContent = ratio.toFixed(1) + "%";
-      ratioSpan.className = ratio > 50 ? "text-danger" : "text-accent";
-
-      const dueWarning = document.getElementById("dueWarning");
-      const today = new Date().getDate();
-      const upcoming = state.debts
-        .filter(d => d.dueDay)
-        .map(d => ({
-          ...d,
-          daysLeft: d.dueDay - today
-        }))
-        .filter(d => d.daysLeft >= 0 && d.daysLeft <= 5)
-        .sort((a,b) => a.daysLeft - b.daysLeft);
-
-      if (upcoming.length) {
-        const msg = upcoming
-          .map(d => `${d.name}: ${d.daysLeft === 0 ? "BUGÜN" : d.daysLeft + " gün içinde"} (gün: ${d.dueDay})`)
-          .join(" • ");
-        dueWarning.style.display = "block";
-        dueWarning.textContent = "Yaklaşan son ödeme günleri: " + msg;
-      } else {
-        dueWarning.style.display = "none";
-      }
-
-      renderTermDeposit();
-    }
-
-    function renderDebts() {
-      const tbody = document.querySelector("#debtTable tbody");
-      tbody.innerHTML = "";
-
-      state.debts.forEach(debt => {
-        const tr = document.createElement("tr");
-        const typeTag = getDebtTypeTag(debt.type);
-
-        const interestText = debt.interestRate
-          ? debt.interestRate.toFixed(2).replace(".", ",") + " %"
-          : "-";
-
-        const instText = debt.remainingInstallments != null && debt.remainingInstallments !== ""
-          ? debt.remainingInstallments + " ay"
-          : "-";
-
-        tr.innerHTML = `
-          <td>${debt.name}</td>
-          <td><span class="${typeTag.cls}">${typeTag.text}</span></td>
-          <td>${formatCurrency(debt.balance)}</td>
-          <td>${formatCurrency(debt.monthlyPayment)}</td>
-          <td>${interestText}</td>
-          <td>${instText}</td>
-          <td>${debt.dueDay ? debt.dueDay + ". gün" : "-"}</td>
-          <td style="text-align:right; white-space:nowrap;">
-            <button class="btn btn-sm btn-ghost" data-edit="${debt.id}">Düzenle</button>
-            <button class="btn btn-sm btn-ghost" data-delete="${debt.id}">Sil</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      tbody.querySelectorAll("button[data-edit]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-edit");
-          loadDebtToForm(id);
-        });
-      });
-
-      tbody.querySelectorAll("button[data-delete]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-delete");
-          deleteDebt(id);
-        });
-      });
-
-      renderSummary();
-      populateDebtSelect();
-      populateSimDebtSelect();
-      renderAvalancheSuggestion();
-    }
-
-    function renderExpenses() {
-      const list = document.getElementById("expenseList");
-      list.innerHTML = "";
-
-      const latest = [...state.expenses].sort((a,b) => b.createdAt - a.createdAt).slice(0, 30);
-
-      if (!latest.length) {
-        list.innerHTML = `<div class="muted">Henüz harcama eklemedin. "Yeni harcama yaptım" butonuna tıklayarak başla.</div>`;
-      } else {
-        latest.forEach(exp => {
-          const debt = state.debts.find(d => d.id === exp.debtId);
-          const div = document.createElement("div");
-          const date = exp.date || exp.displayDate || "";
-          const installmentsInfo =
-            exp.installmentsCount && exp.installmentsCount > 1
-              ? `<div class="muted">${exp.installmentsCount} taksit • Taksit başına ~ ${formatCurrency(exp.amount / exp.installmentsCount)}</div>`
-              : "";
-          div.className = "expense-item";
-          div.innerHTML = `
-            <div>
-              <div>${exp.description || "(Açıklama yok)"}</div>
-              <div class="muted">${debt ? debt.name : "Belirtilmemiş"}</div>
-              ${installmentsInfo}
-            </div>
-            <div class="expense-amount">${formatCurrency(exp.amount)}</div>
-            <div class="expense-date">${date}</div>
-          `;
-          list.appendChild(div);
-        });
-      }
-
-      const totalToday = state.expenses
-        .filter(e => e.date === todayISO())
-        .reduce((sum,e) => sum + (e.amount || 0), 0);
-
-      const alert = document.getElementById("expenseSummaryAlert");
-      if (totalToday > 0) {
-        alert.style.display = "block";
-        alert.textContent = `Bugün yaptığın harcamalar toplamı: ${formatCurrency(totalToday)} (tarihe göre hesaplanır)`;
-      } else {
-        alert.style.display = "none";
-      }
-    }
-
-    function populateDebtSelect() {
-      const select = document.getElementById("expenseDebtSelect");
-      const previous = select.value;
-      select.innerHTML = '<option value="">Seçiniz</option>';
-
-      state.debts.forEach(d => {
-        const opt = document.createElement("option");
-        opt.value = d.id;
-        opt.textContent = d.name;
-        select.appendChild(opt);
-      });
-
-      if (state.debts.some(d => d.id === previous)) {
-        select.value = previous;
-      }
-    }
-
-    function populateSimDebtSelect() {
-      const select = document.getElementById("simDebtSelect");
-      const previous = select.value;
-      select.innerHTML = '<option value="all">Tüm borçlar</option>';
-
-      state.debts.forEach(d => {
-        const opt = document.createElement("option");
-        opt.value = d.id;
-        opt.textContent = d.name;
-        select.appendChild(opt);
-      });
-
-      if (previous && (previous === "all" || state.debts.some(d => d.id === previous))) {
-        select.value = previous;
-      }
-    }
-
-    function upsertDebtFromForm() {
-      const name = document.getElementById("debtName").value.trim();
-      const type = document.getElementById("debtType").value;
-      const balance = parseFloat(document.getElementById("debtBalance").value) || 0;
-      const monthlyPayment = parseFloat(document.getElementById("debtMonthlyPayment").value) || 0;
-      const interestRateVal = document.getElementById("debtInterestRate").value;
-      const interestRate = interestRateVal ? parseFloat(interestRateVal) : 0;
-      const dueDayVal = document.getElementById("debtDueDay").value;
-      const dueDay = dueDayVal ? parseInt(dueDayVal) : null;
-      const instVal = document.getElementById("debtInstallments").value;
-      const remainingInstallments = instVal ? parseInt(instVal) : null;
-
-      if (!name) {
-        alert("Lütfen borç adını gir.");
+    const match = timeStr.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/);
+    if (!match) {
+        document.getElementById("result").innerText = "Geçersiz format.";
         return;
-      }
-
-      const existingIndex = state.debts.findIndex(d => d.name.toLowerCase() === name.toLowerCase());
-
-      if (existingIndex >= 0) {
-        state.debts[existingIndex] = {
-          ...state.debts[existingIndex],
-          name,
-          type,
-          balance,
-          monthlyPayment,
-          interestRate,
-          dueDay,
-          remainingInstallments
-        };
-      } else {
-        state.debts.push({
-          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
-          name,
-          type,
-          balance,
-          monthlyPayment,
-          interestRate,
-          dueDay,
-          remainingInstallments
-        });
-      }
-
-      saveState();
-      renderDebts();
-      document.getElementById("debtForm").reset();
     }
 
-    function loadDebtToForm(id) {
-      const debt = state.debts.find(d => d.id === id);
-      if (!debt) return;
+    let hour = parseInt(match[1]);
+    let minute = match[2] ? parseInt(match[2]) : 0;
+    const period = match[3];
 
-      document.getElementById("debtName").value = debt.name;
-      document.getElementById("debtType").value = debt.type;
-      document.getElementById("debtBalance").value = debt.balance;
-      document.getElementById("debtMonthlyPayment").value = debt.monthlyPayment;
-      document.getElementById("debtInterestRate").value = debt.interestRate || "";
-      document.getElementById("debtDueDay").value = debt.dueDay || "";
-      document.getElementById("debtInstallments").value = debt.remainingInstallments || "";
+    if (period === "pm" && hour !== 12) hour += 12;
+    if (period === "am" && hour === 12) hour = 0;
 
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    const today = new Date();
+    const sourceDate = new Date(
+        today.toLocaleString("en-US", { timeZone })
+    );
 
-    function deleteDebt(id) {
-      if (!confirm("Bu borcu silmek istediğine emin misin?")) return;
-      const index = state.debts.findIndex(d => d.id === id);
-      if (index >= 0) {
-        state.debts.splice(index, 1);
-        saveState();
-        renderDebts();
-        renderExpenses();
-        renderSimulationResult(null);
-      }
-    }
+    sourceDate.setHours(hour, minute, 0, 0);
 
-    function addExpenseFromForm() {
-      const description = document.getElementById("expenseDescription").value.trim();
-      const amount = parseFloat(document.getElementById("expenseAmount").value) || 0;
-      const installmentsVal = document.getElementById("expenseInstallmentsCount").value;
-      let installmentsCount = installmentsVal ? parseInt(installmentsVal) : 1;
-      if (!installmentsCount || installmentsCount < 1) installmentsCount = 1;
-
-      const debtId = document.getElementById("expenseDebtSelect").value;
-      const date = document.getElementById("expenseDate").value || todayISO();
-
-      if (!debtId) {
-        alert("Lütfen harcamayı hangi kart / krediye ekleyeceğini seç.");
-        return;
-      }
-      if (amount <= 0) {
-        alert("Lütfen tutarı 0'dan büyük gir.");
-        return;
-      }
-
-      const debt = state.debts.find(d => d.id === debtId);
-      if (!debt) {
-        alert("Seçilen kart / kredi bulunamadı.");
-        return;
-      }
-
-      debt.balance = (debt.balance || 0) + amount;
-
-      state.expenses.push({
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
-        description,
-        amount,
-        debtId,
-        date,
-        installmentsCount,
-        createdAt: Date.now()
-      });
-
-      saveState();
-      renderDebts();
-      renderExpenses();
-
-      document.getElementById("expenseForm").reset();
-      document.getElementById("expenseDate").value = todayISO();
-    }
-
-    function saveIncomeFromForm() {
-      const income = parseFloat(document.getElementById("incomeInput").value) || 0;
-      state.income = income;
-      saveState();
-      renderSummary();
-    }
-
-    function saveTermDepositFromForm() {
-      const balance = parseFloat(document.getElementById("termBalanceInput").value) || 0;
-      const rate = parseFloat(document.getElementById("termRateInput").value) || 0;
-      state.termDeposit = { balance, annualRate: rate };
-      saveState();
-      renderTermDeposit();
-    }
-
-    function runSimulationFromForm() {
-      const select = document.getElementById("simDebtSelect");
-      const targetDateStr = document.getElementById("simTargetDate").value;
-
-      if (!targetDateStr) {
-        alert("Lütfen hedef tarihi seç.");
-        return;
-      }
-
-      const months = monthsBetweenNowAnd(targetDateStr);
-      if (months <= 0) {
-        alert("Hedef tarih bugünden ileride olmalı.");
-        return;
-      }
-
-      let debtsToSim = [];
-      if (select.value === "all") {
-        debtsToSim = state.debts.filter(d => d.balance > 0);
-      } else {
-        const d = state.debts.find(x => x.id === select.value);
-        if (d) debtsToSim = [d];
-      }
-
-      if (!debtsToSim.length) {
-        alert("Simüle edilecek borç bulunamadı.");
-        return;
-      }
-
-      const results = debtsToSim.map(d => {
-        const P = d.balance || 0;
-        const r = d.interestRate ? d.interestRate / 100 : 0;
-        let payment = 0;
-        if (r > 0) {
-          const pow = Math.pow(1 + r, -months);
-          payment = P * r / (1 - pow);
-        } else {
-          payment = P / months;
-        }
-        const totalPaid = payment * months;
-        const totalInterest = Math.max(totalPaid - P, 0);
-        return {
-          debt: d,
-          monthlyPaymentNeeded: payment,
-          totalInterest,
-          months
-        };
-      });
-
-      renderSimulationResult(results);
-    }
-
-    function renderSimulationResult(results) {
-      const container = document.getElementById("simResult");
-      if (!results || !results.length) {
-        container.style.display = "none";
-        container.innerHTML = "";
-        return;
-      }
-
-      const months = results[0].months;
-      const totalMonthlyNeeded = results.reduce((sum,r) => sum + r.monthlyPaymentNeeded, 0);
-      const totalInterest = results.reduce((sum,r) => sum + r.totalInterest, 0);
-
-      container.style.display = "block";
-      container.innerHTML = `
-        <div class="sim-main">
-          Seçilen borç(lar)ı <span class="sim-highlight">${months} ay</span> içinde bitirmek için
-          toplam aylık ödemen gereken tutar: <span class="sim-highlight">${formatCurrency(totalMonthlyNeeded)}</span>.
-        </div>
-        <div class="sim-sub">
-          Basit hesaplama: Aylık faiz oranını (varsa) kullanarak sabit taksit varsayımı yapılır; gerçek bankanın hesabıyla küçük farklar olabilir.
-        </div>
-        <div class="sim-sub" style="margin-top:4px;">
-          Tahmini toplam faiz yükü: <span class="sim-highlight">${formatCurrency(totalInterest)}</span>.
-        </div>
-        <div class="sim-list">
-          ${results.map(r => `
-            <div class="sim-item">
-              <div>
-                <div class="sim-main">${r.debt.name}</div>
-                <div class="sim-sub">
-                  Mevcut min. ödeme: ${formatCurrency(r.debt.monthlyPayment || 0)}
-                  ${r.debt.interestRate ? ` • Aylık faiz: ${r.debt.interestRate.toFixed(2).replace(".", ",")}%` : ""}
-                </div>
-              </div>
-              <div style="text-align:right;">
-                <div class="sim-main">${formatCurrency(r.monthlyPaymentNeeded)}</div>
-                <div class="sim-sub">Gereken aylık ödeme</div>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      `;
-    }
-
-    function renderAvalancheSuggestion() {
-      const container = document.getElementById("avalancheResult");
-      if (!container) return;
-
-      const debtsWithBalance = state.debts.filter(d => (d.balance || 0) > 0);
-
-      if (!debtsWithBalance.length) {
-        container.style.display = "block";
-        container.innerHTML = `<div class="sim-sub">Aktif borcun yok veya hepsinin bakiyesi 0 görünüyor. 🎉</div>`;
-        return;
-      }
-
-      const sorted = debtsWithBalance.slice().sort((a, b) => {
-        const ra = (b.interestRate || 0) - (a.interestRate || 0);
-        if (ra !== 0) return ra;
-        return (b.balance || 0) - (a.balance || 0);
-      });
-
-      const allZeroInterest = sorted.every(d => !d.interestRate);
-
-      container.style.display = "block";
-      container.innerHTML = `
-        <div class="sim-main">
-          Avalanche (faiz odaklı) yönteme göre, <span class="sim-highlight">en yüksek faiz oranlı borçtan</span>
-          başlayarak ekstra ödemeleri aşağıdaki sırayla yapman mantıklı:
-        </div>
-        <div class="sim-list" style="margin-top:8px;">
-          ${sorted.map((d, idx) => `
-            <div class="sim-item">
-              <div>
-                <div class="sim-main">#${idx + 1} - ${d.name}</div>
-                <div class="sim-sub">
-                  Bakiye: ${formatCurrency(d.balance || 0)}
-                  • Min. ödeme: ${formatCurrency(d.monthlyPayment || 0)}
-                  ${d.interestRate ? `• Aylık faiz: ${d.interestRate.toFixed(2).replace(".", ",")}%` : "• Faiz oranı belirtilmemiş (0% varsayıldı)"}
-                </div>
-              </div>
-              <div style="text-align:right;">
-                <div class="sim-sub">Tür: ${getDebtTypeTag(d.type).text}</div>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-        <div class="sim-sub" style="margin-top:6px;">
-          Not: Önce listenin başındaki borca mümkün olduğunca fazla ödeme yapıp, sadece diğer borçlara minimum ödemeleri yaparsan,
-          toplam faiz yükünü uzun vadede azaltmış olursun.
-          ${allZeroInterest ? "<br/>Tüm faiz oranları boş/0 göründüğü için sıralama bakiyeye göre yapıldı." : ""}
-        </div>
-      `;
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      loadState();
-      updateCurrentMonthLabel();
-
-      const expenseDateInput = document.getElementById("expenseDate");
-      expenseDateInput.value = todayISO();
-
-      document.getElementById("debtForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        upsertDebtFromForm();
-      });
-
-      document.getElementById("expenseForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        addExpenseFromForm();
-      });
-
-      document.getElementById("incomeForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        saveIncomeFromForm();
-      });
-
-      document.getElementById("termDepositForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        saveTermDepositFromForm();
-      });
-
-      document.getElementById("simForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        runSimulationFromForm();
-      });
-
-      const toggleBtn = document.getElementById("toggleExpenseFormBtn");
-      const expenseContainer = document.getElementById("expenseFormContainer");
-      const cancelExpenseBtn = document.getElementById("cancelExpenseBtn");
-
-      function toggleExpenseForm(show) {
-        const willShow = show !== undefined ? show : expenseContainer.style.display === "none";
-        expenseContainer.style.display = willShow ? "block" : "none";
-        toggleBtn.innerHTML = willShow
-          ? '<span class="btn-icon">✖</span> Harçama eklemeyi kapat'
-          : '<span class="btn-icon">➕</span> Yeni harcama yaptım';
-        if (willShow) {
-          document.getElementById("expenseDescription").focus();
-        }
-      }
-
-      toggleBtn.addEventListener("click", () => toggleExpenseForm());
-      cancelExpenseBtn.addEventListener("click", () => toggleExpenseForm(false));
-
-      document.getElementById("incomeInput").value = state.income || "";
-      renderDebts();
-      renderExpenses();
-      renderTermDeposit();
+    const turkeyTime = sourceDate.toLocaleTimeString("tr-TR", {
+        timeZone: "Europe/Istanbul",
+        hour: "2-digit",
+        minute: "2-digit"
     });
-  </script>
+
+    document.getElementById("result").innerText =
+        "Türkiye Saati: " + turkeyTime;
+}
+</script>
+
 </body>
 </html>
