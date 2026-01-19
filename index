@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>AM/PM → Türkiye Saati</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root {
+    --bg: #ffffff;
+    --text: #000000;
+    --input-bg: #f2f2f2;
+    --border: #cccccc;
+    --btn-bg: #000000;
+    --btn-text: #ffffff;
+}
+
+[data-theme="dark"] {
+    --bg: #121212;
+    --text: #eaeaea;
+    --input-bg: #1f1f1f;
+    --border: #333333;
+    --btn-bg: #ffffff;
+    --btn-text: #000000;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+    max-width: 420px;
+    margin: 40px auto;
+    padding: 15px;
+    transition: all 0.3s ease;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+button {
+    cursor: pointer;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+}
+
+.toggle {
+    margin-bottom: 15px;
+    text-align: right;
+}
+
+.result {
+    margin-top: 15px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+footer {
+    margin-top: 40px;
+    font-size: 12px;
+    color: gray;
+    text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="toggle">
+    <button onclick="toggleTheme()">🌙 / ☀️</button>
+</div>
+
+<h2>AM / PM → Türkiye Saati</h2>
+
+<label>Zaman Dilimi</label>
+<select id="country">
+    <option value="America/New_York">Amerika (New York)</option>
+    <option value="Europe/Vienna">Avusturya (Viyana)</option>
+</select>
+
+<label>Saat (ör: 11 pm, 9:30 am)</label>
+<input type="text" id="timeInput" placeholder="11 pm">
+
+<button onclick="convertTime()">Çevir</button>
+
+<div class="result" id="result"></div>
+
+<footer>
+    Yaz saati otomatik hesaplanır
+</footer>
+
+<script>
+const root = document.documentElement;
+
+function setTheme(theme) {
+    root.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+}
+
+function toggleTheme() {
+    const current = root.getAttribute("data-theme");
+    setTheme(current === "dark" ? "light" : "dark");
+}
+
+// İlk yükleme
+(function initTheme() {
+    const saved = localStorage.getItem("theme");
+    if (saved) {
+        setTheme(saved);
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        setTheme("dark");
+    }
+})();
+
+function convertTime() {
+    const timeStr = document.getElementById("timeInput").value.trim().toLowerCase();
+    const timeZone = document.getElementById("country").value;
+
+    const match = timeStr.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/);
+    if (!match) {
+        document.getElementById("result").innerText = "Geçersiz format.";
+        return;
+    }
+
+    let hour = parseInt(match[1]);
+    let minute = match[2] ? parseInt(match[2]) : 0;
+    const period = match[3];
+
+    if (period === "pm" && hour !== 12) hour += 12;
+    if (period === "am" && hour === 12) hour = 0;
+
+    const today = new Date();
+    const sourceDate = new Date(
+        today.toLocaleString("en-US", { timeZone })
+    );
+
+    sourceDate.setHours(hour, minute, 0, 0);
+
+    const turkeyTime = sourceDate.toLocaleTimeString("tr-TR", {
+        timeZone: "Europe/Istanbul",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+    document.getElementById("result").innerText =
+        "Türkiye Saati: " + turkeyTime;
+}
+</script>
+
+</body>
+</html>
